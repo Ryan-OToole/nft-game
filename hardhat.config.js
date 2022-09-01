@@ -17,13 +17,14 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
  require('@nomiclabs/hardhat-waffle');
+ require("dotenv").config({ path: ".env" });
 
  module.exports = {
    solidity: '0.8.1',
    networks: {
      rinkeby: {
-       url: "",
-       accounts: [""],
+       url: process.env.INFURA_API,
+       accounts: [process.env.RINKEBY_KEY],
        chainId: 4
      },
    },
