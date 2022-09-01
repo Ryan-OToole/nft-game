@@ -9,21 +9,15 @@ const main = async () => {
   ],
     
     [100, 200, 300, 175],                    // HP values
-    [100, 50, 25, 125],
+    [100, 50, 25, 125],                      // Attack damage values
     "The Joker",
     "https://imgur.com/gallery/hUU4ulH",
     850,
-    50                          // Attack damage values
+    50               
   );
   await gameContract.deployed();
   console.log("Contract deployed to:", gameContract.address);
-  let txn;
-  txn = await gameContract.mintCharacterNFT(2);
-  await txn.wait();
-
-  let returnedTokenURI = await gameContract.tokenURI(1);
-  console.log('tokenURI', returnedTokenURI);
-};
+}
 
 const runMain = async () => {
   try {
@@ -36,5 +30,3 @@ const runMain = async () => {
 };
 
 runMain();
-
-
