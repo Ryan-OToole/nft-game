@@ -59,7 +59,6 @@ contract MyEpicGame is ERC721 {
     function mintCharacterNFT(uint _characterIndex) external {
         uint newItemId = _tokenIds.current();
         _safeMint(msg.sender, newItemId);
-
         nftHolderAttributes[newItemId] = CharacterAttributes({
             characterIndex: _characterIndex,
             name: defaultCharacters[_characterIndex].name,
