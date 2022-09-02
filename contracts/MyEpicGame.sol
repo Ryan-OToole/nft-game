@@ -106,23 +106,24 @@ contract MyEpicGame is ERC721 {
 
     function tokenURI(uint _tokenId) public view override returns (string memory) {
         CharacterAttributes memory charAttributes = nftHolderAttributes[_tokenId];
-        console.log("****", charAttributes.hp, "****");
         string memory stringHP = Strings.toString(charAttributes.hp);
         string memory stringMaxHP = Strings.toString(charAttributes.maxHP);
         string memory stringAttackDamage = Strings.toString(charAttributes.attackDamage);
 
+
         string memory json = Base64.encode(
             abi.encodePacked(
-                '{"name": "',
-                charAttributes.name,
-                ' -- NFT #: ',
-                Strings.toString(_tokenId),
-                '", "description": "This is an NFT that lets people play in the game Metaverse Slayer!", "image": "',
-                charAttributes.imageURI,
-                '", "attributes": [ { "trait_type": "Health Points", "value": ',stringHP,', "max_value":',stringMaxHP,'}, { "trait_type": "Attack Damage", "value": ',
-                stringAttackDamage,'} ]}'
+            '{"name": "',
+            charAttributes.name,
+            ' -- NFT #: ',
+            Strings.toString(_tokenId),
+            '", "description": "This is an NFT that lets people play in the game Metaverse Slayer!", "image": "',
+            charAttributes.imageURI,
+            '", "attributes": [ { "trait_type": "Health Points", "value": ',stringHP,', "max_value":',stringMaxHP,'}, { "trait_type": "Attack Damage", "value": ',
+            stringAttackDamage,'} ]}'
             )
         );
+        
         string memory output = string(abi.encodePacked("data:application/json;base64,", json));
         return output;
     }

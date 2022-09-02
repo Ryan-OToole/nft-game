@@ -1,17 +1,17 @@
 const main = async () => {
   const gameContractFactory = await hre.ethers.getContractFactory('MyEpicGame');
   const gameContract = await gameContractFactory.deploy(
-    ["SquirrelMan", "PoodleMoth", "Batboy", "Batman"],       // Names
-    ["https://imgur.com/t/squirrel/4MJbBTY", // Images
-    "https://imgur.com/gallery/8EvG6cN", 
-    "https://imgur.com/gallery/uh5YEz4",
-    "https://imgur.com/gallery/IC4DdQC"
+    ["DogSquirrelMan", "PoodleMoth", "Batboy", "Batman"],       // Names
+    ["https://i.imgur.com/o7iAFMu.png", // Images
+    "https://i.imgur.com/8EvG6cN.png", 
+    "https://i.imgur.com/uh5YEz4.png",
+    "https://i.imgur.com/IC4DdQC.png"
   ],
     
     [100, 200, 300, 175],                    // HP values
     [100, 50, 25, 125],                      // Attack damage values
     "The Joker",
-    "https://imgur.com/gallery/hUU4ulH",
+    "https://i.imgur.com/hUU4ulH.png",
     850,
     50               
   );
@@ -30,3 +30,9 @@ const runMain = async () => {
 };
 
 runMain();
+
+
+
+
+
+

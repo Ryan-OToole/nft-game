@@ -22,9 +22,14 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  module.exports = {
    solidity: '0.8.1',
    networks: {
+    goerli: {
+      url: process.env.INFURA_API_GOERLI,
+      accounts: [process.env.METAMASK_KEY_GOERLI],
+      chainId: 5
+     },
      rinkeby: {
-       url: process.env.INFURA_API,
-       accounts: [process.env.RINKEBY_KEY],
+       url: process.env.INFURA_API_RINKEBY,
+       accounts: [process.env.METAMASK_KEY_RINKEBY],
        chainId: 4
      },
    },
