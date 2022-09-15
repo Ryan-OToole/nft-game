@@ -21,6 +21,17 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 
  module.exports = {
    solidity: '0.8.1',
+  //  solidity: {
+  //   compilers: [
+  //     {
+  //       version: "0.8.1",
+  //     },
+  //     {
+  //       version: "0.8.7",
+  //       settings: {},
+  //     },
+  //   ],
+  // },
    networks: {
     goerli: {
       url: process.env.INFURA_API_GOERLI,
@@ -34,3 +45,4 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
      },
    },
  };
+

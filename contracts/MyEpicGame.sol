@@ -12,15 +12,29 @@ import "hardhat/console.sol";
 
 import "./libraries/Base64.sol";
 
+contract MyEpicGameFactory {
+        MyEpicGame[] public deployedGames;
+
+    function deployGame(string[] memory _characterNames, string[] memory _characterImageURIs, uint[] memory _characterHP, uint[] memory _characterAttackDamage, string memory _bossName, string memory _bossImageURI, uint _bossHp, uint _bossAttackDamage) public {
+            MyEpicGame myEpicGame = new MyEpicGame(_characterNames, _characterImageURIs, _characterHP, _characterAttackDamage, _bossName, _bossImageURI, _bossHp, _bossAttackDamage);
+            deployedGames.push(myEpicGame);
+    }
+    function getDeployedGames() public view returns (MyEpicGame[] memory) {
+        return deployedGames;
+    }
+}
+
 contract MyEpicGame is ERC721 {
 
     struct CharacterAttributes {
+        address sender;
         uint characterIndex;
         string name;
         string imageURI;
         uint hp;
         uint maxHP;
         uint attackDamage;
+        uint damageDone;
     }
 
       // The tokenId is the NFTs unique identifier, it's just a number that goes
@@ -28,9 +42,12 @@ contract MyEpicGame is ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
+    CharacterAttributes[] allPlayersInGame;
+
     CharacterAttributes[] defaultCharacters;
 
     mapping(uint => CharacterAttributes) public nftHolderAttributes;
+
 
     struct BigBoss {
         string name;
@@ -44,8 +61,9 @@ contract MyEpicGame is ERC721 {
 
     mapping(address => uint) public nftHolders;
 
-    event CharacterNftMinted(address sender, uint tokenID, uint characterIndex);
-    event AttackComplete(address sender, uint newBossHP, uint newPlayerHP);
+    event CharacterNftMinted(address sender, uint tokenID, uint characterIndex, CharacterAttributes[] allPlayersInGame);
+    event AttackComplete(address sender, uint newBossHP, uint newPlayerHP, uint damageDone, CharacterAttributes[] allPlayersInGame);
+    event NftDeath(address sender, CharacterAttributes[] allPlayersInGame);
 
     constructor(
         string[] memory characterNames,
@@ -56,7 +74,7 @@ contract MyEpicGame is ERC721 {
         string memory bossImageURI,
         uint bossHp,
         uint bossAttackDamage
-    )     ERC721("Animales", "ANIMAL")
+    )     ERC721("Darkwing Nights", "BATWING")
     {
         bigBoss = BigBoss({
             name: bossName,
@@ -70,12 +88,14 @@ contract MyEpicGame is ERC721 {
 
         for (uint i=0; i < characterNames.length; i++) {
             defaultCharacters.push(CharacterAttributes({
+                sender: msg.sender,
                 characterIndex: i,
                 name: characterNames[i],
                 imageURI: characterImageURIs[i],
                 hp: characterHP[i],
                 maxHP: characterHP[i],
-                attackDamage: characterAttackDamage[i]
+                attackDamage: characterAttackDamage[i],
+                damageDone: 0
             }));
             CharacterAttributes memory c = defaultCharacters[i];
             console.log("Done initializing %s w/ HP %s, img %s", c.name, c.hp, c.imageURI);
@@ -87,21 +107,22 @@ contract MyEpicGame is ERC721 {
         uint newItemId = _tokenIds.current();
         _safeMint(msg.sender, newItemId);
         nftHolderAttributes[newItemId] = CharacterAttributes({
+            sender: msg.sender,
             characterIndex: _characterIndex,
             name: defaultCharacters[_characterIndex].name,
             imageURI: defaultCharacters[_characterIndex].imageURI,
             hp: defaultCharacters[_characterIndex].hp,
             maxHP: defaultCharacters[_characterIndex].maxHP,
-            attackDamage: defaultCharacters[_characterIndex].attackDamage
+            attackDamage: defaultCharacters[_characterIndex].attackDamage,
+            damageDone: 0
         });
-
+        allPlayersInGame.push(nftHolderAttributes[newItemId]);
         console.log("Minted NFT w/ tokenId %s and characterIndex %s", newItemId, _characterIndex);
 
         nftHolders[msg.sender] = newItemId;
-
         _tokenIds.increment();
 
-        emit CharacterNftMinted(msg.sender, newItemId, _characterIndex);
+        emit CharacterNftMinted(msg.sender, newItemId, _characterIndex, allPlayersInGame);
     }
 
     function tokenURI(uint _tokenId) public view override returns (string memory) {
@@ -109,7 +130,7 @@ contract MyEpicGame is ERC721 {
         string memory stringHP = Strings.toString(charAttributes.hp);
         string memory stringMaxHP = Strings.toString(charAttributes.maxHP);
         string memory stringAttackDamage = Strings.toString(charAttributes.attackDamage);
-
+        string memory stringDamageDone = Strings.toString(charAttributes.damageDone);
 
         string memory json = Base64.encode(
             abi.encodePacked(
@@ -117,10 +138,11 @@ contract MyEpicGame is ERC721 {
             charAttributes.name,
             ' -- NFT #: ',
             Strings.toString(_tokenId),
-            '", "description": "This is an NFT that lets people play in the game Metaverse Slayer!", "image": "',
+            '", "description": "This is an NFT that lets people play in the game Darkwing Nights!", "image": "ipfs://',
             charAttributes.imageURI,
             '", "attributes": [ { "trait_type": "Health Points", "value": ',stringHP,', "max_value":',stringMaxHP,'}, { "trait_type": "Attack Damage", "value": ',
-            stringAttackDamage,'} ]}'
+            stringAttackDamage,'}, { "trait_type": "Total Damage Dealt", "value": ',
+            stringDamageDone,'} ]}'
             )
         );
         
@@ -132,17 +154,18 @@ contract MyEpicGame is ERC721 {
         // Get the state of the player's NFT.
         uint nftTokenIDPlayer = nftHolders[msg.sender];
         CharacterAttributes storage player = nftHolderAttributes[nftTokenIDPlayer];
-        console.log("\nPlayer w/ character %s about to attack. Has %s HP and %s AD", player.name, player.hp, player.attackDamage);
-        console.log("Boss %s has %s HP and %s AD", bigBoss.name, bigBoss.hp, bigBoss.attackDamage);
+
         // Make sure the player has more than 0 HP.
         require(player.hp > 0, "Player has no HP cant play");
         // Make sure the boss has more than 0 HP.
         require(bigBoss.hp > 0, "Boss has no HP cant play");
         // Allow player to attack boss.
         if (bigBoss.hp < player.attackDamage) {
+            player.damageDone += bigBoss.hp;
             bigBoss.hp = 0;
         }
         else {
+            player.damageDone += player.attackDamage;
             bigBoss.hp -= player.attackDamage;
         }
         // Allow boss to attack player.
@@ -152,10 +175,17 @@ contract MyEpicGame is ERC721 {
         else {
             player.hp -= bigBoss.attackDamage;
         }
-        // Console for ease.
-        console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
-        console.log("Boss attacked player. New player hp: %s\n", player.hp);
-        emit AttackComplete(msg.sender, bigBoss.hp, player.hp);
+        for (uint i=0; i < allPlayersInGame.length; i++) {
+            if (allPlayersInGame[i].sender == msg.sender) {
+                if (player.hp == 0) {
+                    delete allPlayersInGame[i];
+                    emit NftDeath(msg.sender, allPlayersInGame);
+                } else {
+                    allPlayersInGame[i] = player;
+                }
+            }
+        }
+        emit AttackComplete(msg.sender, bigBoss.hp, player.hp, player.damageDone, allPlayersInGame);
     }
 
     function checkIfUserHasNFT() public view returns (CharacterAttributes memory) {
@@ -175,5 +205,9 @@ contract MyEpicGame is ERC721 {
 
     function getBigBoss() public view returns (BigBoss memory) {
         return bigBoss;
+    }
+
+    function getAllPlayersInGame() public view returns (CharacterAttributes[] memory) {
+        return allPlayersInGame;
     }
  }
