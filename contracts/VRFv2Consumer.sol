@@ -63,6 +63,11 @@ contract VRFv2Consumer is VRFConsumerBaseV2 {
     );
   }
 
+  function returnRandomNumber() public view returns (uint256) {
+    uint randomNumber = s_randomWords[s_randomWords.length - 1];
+    return randomNumber;
+  }
+
   function fulfillRandomWords(
     uint256, /* requestId */
     uint256[] memory randomWords

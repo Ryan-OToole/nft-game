@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.1;
 
-// NFT contract to inherit from.
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-// Helper functions OpenZeppelin provides.
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -12,17 +10,6 @@ import "hardhat/console.sol";
 
 import "./libraries/Base64.sol";
 
-contract MyEpicGameFactory {
-        MyEpicGame[] public deployedGames;
-
-    function deployGame(string[] memory _characterNames, string[] memory _characterImageURIs, uint[] memory _characterHP, uint[] memory _characterAttackDamage, string memory _bossName, string memory _bossImageURI, uint _bossHp, uint _bossAttackDamage) public {
-            MyEpicGame myEpicGame = new MyEpicGame(_characterNames, _characterImageURIs, _characterHP, _characterAttackDamage, _bossName, _bossImageURI, _bossHp, _bossAttackDamage);
-            deployedGames.push(myEpicGame);
-    }
-    function getDeployedGames() public view returns (MyEpicGame[] memory) {
-        return deployedGames;
-    }
-}
 
 contract MyEpicGame is ERC721 {
 
@@ -37,8 +24,6 @@ contract MyEpicGame is ERC721 {
         uint damageDone;
     }
 
-      // The tokenId is the NFTs unique identifier, it's just a number that goes
-      // 0, 1, 2, 3, etc.
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
@@ -47,7 +32,6 @@ contract MyEpicGame is ERC721 {
     CharacterAttributes[] defaultCharacters;
 
     mapping(uint => CharacterAttributes) public nftHolderAttributes;
-
 
     struct BigBoss {
         string name;
@@ -58,6 +42,10 @@ contract MyEpicGame is ERC721 {
     }
 
     BigBoss public bigBoss;
+    CharacterAttributes private dogSquirrelMan;
+    CharacterAttributes private poodleMoth;
+    CharacterAttributes private batboy;
+    CharacterAttributes private batman;
 
     mapping(address => uint) public nftHolders;
 
@@ -65,7 +53,8 @@ contract MyEpicGame is ERC721 {
     event AttackComplete(address sender, uint newBossHP, uint newPlayerHP, uint damageDone, CharacterAttributes[] allPlayersInGame);
     event NftDeath(address sender, CharacterAttributes[] allPlayersInGame);
 
-    constructor(
+
+    constructor(        
         string[] memory characterNames,
         string[] memory characterImageURIs,
         uint[] memory characterHP,
@@ -74,7 +63,7 @@ contract MyEpicGame is ERC721 {
         string memory bossImageURI,
         uint bossHp,
         uint bossAttackDamage
-    )     ERC721("Darkwing Nights", "BATWING")
+        ) ERC721("Darkwing Nights", "BATWING")
     {
         bigBoss = BigBoss({
             name: bossName,
@@ -83,9 +72,7 @@ contract MyEpicGame is ERC721 {
             maxHP: bossHp,
             attackDamage: bossAttackDamage
         });
-
-        console.log("Done initializing boss %s w/ HP %s, img %s", bigBoss.name, bigBoss.hp, bigBoss.imageURI);
-
+    
         for (uint i=0; i < characterNames.length; i++) {
             defaultCharacters.push(CharacterAttributes({
                 sender: msg.sender,
@@ -102,6 +89,7 @@ contract MyEpicGame is ERC721 {
         }
         _tokenIds.increment();
     }
+
 
     function mintCharacterNFT(uint _characterIndex) external {
         uint newItemId = _tokenIds.current();
