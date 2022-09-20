@@ -16,10 +16,6 @@ const main = async () => {
   );
   await gameContract.deployed();
   console.log("Contract deployed to game:", gameContract.address);
-  // const VRFv2Consumer = await hre.ethers.getContractFactory('VRFv2Consumer');
-  // const VRFv2ConsumerDeployed = await VRFv2Consumer.deploy(1823);
-  // await VRFv2ConsumerDeployed.deployed();
-  // console.log("Contract deployed to vrf:", VRFv2ConsumerDeployed.address);
 }
 
 const runMain = async () => {

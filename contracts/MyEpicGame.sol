@@ -151,10 +151,15 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
     }
 
     function attackBoss() public {
+        console.log("s_randomWords[0] % 10", s_randomWords[0] % 10);
         // Get the state of the player's NFT.
         uint nftTokenIDPlayer = nftHolders[msg.sender];
         CharacterAttributes storage player = nftHolderAttributes[nftTokenIDPlayer];
-
+        console.log("player.attackDamage b4", player.attackDamage);
+        if (s_randomWords[0] % 2 == 0) {
+            player.attackDamage = player.attackDamage * 2;
+        }
+        console.log("player.attackDamage After", player.attackDamage);
         // Make sure the player has more than 0 HP.
         require(player.hp > 0, "Player has no HP cant play");
         // Make sure the boss has more than 0 HP.
@@ -184,6 +189,9 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
                     allPlayersInGame[i] = player;
                 }
             }
+        }
+        if (s_randomWords[0] % 2 == 0) {
+            player.attackDamage = player.attackDamage / 2;
         }
         emit AttackComplete(msg.sender, bigBoss.hp, player.hp, player.damageDone, allPlayersInGame);
     }
