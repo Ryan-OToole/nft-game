@@ -1,6 +1,6 @@
 
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.1;
+pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
@@ -10,9 +10,10 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "hardhat/console.sol";
 
 import "./libraries/Base64.sol";
-import "./VRFv2Consumer.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 
-contract MyEpicGame is ERC721 {
+contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
 
     struct CharacterAttributes {
         address sender;
@@ -24,8 +25,6 @@ contract MyEpicGame is ERC721 {
         uint attackDamage;
         uint damageDone;
     }
-
-    VRFv2Consumer private vrfv2Consumer;
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -52,6 +51,17 @@ contract MyEpicGame is ERC721 {
     event AttackComplete(address sender, uint newBossHP, uint newPlayerHP, uint damageDone, CharacterAttributes[] allPlayersInGame);
     event NftDeath(address sender, CharacterAttributes[] allPlayersInGame);
 
+    VRFCoordinatorV2Interface COORDINATOR;
+    uint64 s_subscriptionId;
+    address vrfCoordinator = 0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D;
+    bytes32 keyHash = 0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15;
+    uint32 callbackGasLimit = 100000;
+    uint16 requestConfirmations = 3;
+    uint32 numWords =  2;
+    uint256[] public s_randomWords;
+    uint256 public s_requestId;
+    address s_owner;
+    uint256 randomNumber;
 
     constructor(        
         string[] memory characterNames,
@@ -62,8 +72,8 @@ contract MyEpicGame is ERC721 {
         string memory bossImageURI,
         uint bossHp,
         uint bossAttackDamage,
-        address vrf2
-        ) ERC721("Darkwing Nights", "BATWING")
+        uint64 subscriptionId
+        ) ERC721("Darkwing Nights", "BATWING") VRFConsumerBaseV2(vrfCoordinator)
     {
         bigBoss = BigBoss({
             name: bossName,
@@ -87,21 +97,10 @@ contract MyEpicGame is ERC721 {
             CharacterAttributes memory c = defaultCharacters[i];
             console.log("Done initializing %s w/ HP %s, img %s", c.name, c.hp, c.imageURI);
         }
-        vrfv2Consumer = VRFv2Consumer(vrf2);
+        COORDINATOR = VRFCoordinatorV2Interface(vrfCoordinator);
+        s_owner = msg.sender;
+        s_subscriptionId = subscriptionId;
         _tokenIds.increment();
-    }
-
-    function requestRandomNumber() public {
-        vrfv2Consumer.requestRandomWords();
-    }
-
-    function getRandomNumber() public view returns (uint256) {
-        uint256 number;
-        for (uint i=0; i<1; i++) {
-            number = vrfv2Consumer.s_randomWords(i);
-        }
-        console.log("number", number);
-        return number;
     }
 
     function mintCharacterNFT(uint _characterIndex) external {
@@ -211,4 +210,27 @@ contract MyEpicGame is ERC721 {
     function getAllPlayersInGame() public view returns (CharacterAttributes[] memory) {
         return allPlayersInGame;
     }
+
+    function requestRandomWords() external onlyOwner {
+        s_requestId = COORDINATOR.requestRandomWords(
+        keyHash,
+        s_subscriptionId,
+        requestConfirmations,
+        callbackGasLimit,
+        numWords
+        );
+    }
+
+    function fulfillRandomWords(
+        uint256, /* requestId */
+        uint256[] memory randomWords
+    ) internal override {
+        randomNumber = randomWords[0];
+        s_randomWords = randomWords;
+    }
+
+  modifier onlyOwner() {
+    require(msg.sender == s_owner);
+    _;
+  }
 }

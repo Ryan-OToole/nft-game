@@ -12,7 +12,7 @@ const main = async () => {
     "Qmb7Mpq61ezSXHUUBjpiKL51u9BMdSxhMxKP4Xkw4spPxg",
     850,
     50,
-    '0x4C04eF705d9cA6bd05C8A8854570EAf21eD116b3'
+    '1823'
   );
   await gameContract.deployed();
   console.log("Contract deployed to game:", gameContract.address);
