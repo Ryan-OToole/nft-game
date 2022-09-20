@@ -11,12 +11,13 @@ const main = async () => {
     "The Joker",
     "Qmb7Mpq61ezSXHUUBjpiKL51u9BMdSxhMxKP4Xkw4spPxg",
     850,
-    50     
+    50,
+    '0x4C04eF705d9cA6bd05C8A8854570EAf21eD116b3'
   );
   await gameContract.deployed();
   console.log("Contract deployed to game:", gameContract.address);
   // const VRFv2Consumer = await hre.ethers.getContractFactory('VRFv2Consumer');
-  // const VRFv2ConsumerDeployed = await VRFv2Consumer.deploy(1822);
+  // const VRFv2ConsumerDeployed = await VRFv2Consumer.deploy(1823);
   // await VRFv2ConsumerDeployed.deployed();
   // console.log("Contract deployed to vrf:", VRFv2ConsumerDeployed.address);
 }

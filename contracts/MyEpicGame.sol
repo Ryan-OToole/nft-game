@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "hardhat/console.sol";
 
 import "./libraries/Base64.sol";
-
+import "./VRFv2Consumer.sol";
 
 contract MyEpicGame is ERC721 {
 
@@ -24,6 +24,8 @@ contract MyEpicGame is ERC721 {
         uint attackDamage;
         uint damageDone;
     }
+
+    VRFv2Consumer private vrfv2Consumer;
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -59,7 +61,8 @@ contract MyEpicGame is ERC721 {
         string memory bossName,
         string memory bossImageURI,
         uint bossHp,
-        uint bossAttackDamage
+        uint bossAttackDamage,
+        address vrf2
         ) ERC721("Darkwing Nights", "BATWING")
     {
         bigBoss = BigBoss({
@@ -84,9 +87,22 @@ contract MyEpicGame is ERC721 {
             CharacterAttributes memory c = defaultCharacters[i];
             console.log("Done initializing %s w/ HP %s, img %s", c.name, c.hp, c.imageURI);
         }
+        vrfv2Consumer = VRFv2Consumer(vrf2);
         _tokenIds.increment();
     }
 
+    function requestRandomNumber() public {
+        vrfv2Consumer.requestRandomWords();
+    }
+
+    function getRandomNumber() public view returns (uint256) {
+        uint256 number;
+        for (uint i=0; i<1; i++) {
+            number = vrfv2Consumer.s_randomWords(i);
+        }
+        console.log("number", number);
+        return number;
+    }
 
     function mintCharacterNFT(uint _characterIndex) external {
         uint newItemId = _tokenIds.current();
@@ -193,6 +209,6 @@ contract MyEpicGame is ERC721 {
     }
 
     function getAllPlayersInGame() public view returns (CharacterAttributes[] memory) {
-  
+        return allPlayersInGame;
     }
- }
+}
