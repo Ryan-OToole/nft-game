@@ -50,6 +50,7 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
     event CharacterNftMinted(address sender, uint tokenID, uint characterIndex, CharacterAttributes[] allPlayersInGame);
     event AttackComplete(address sender, uint newBossHP, uint newPlayerHP, uint damageDone, CharacterAttributes[] allPlayersInGame);
     event NftDeath(address sender, CharacterAttributes[] allPlayersInGame);
+    event RandomNumberEvent(uint number, string praise);
 
     VRFCoordinatorV2Interface COORDINATOR;
     uint64 s_subscriptionId;
@@ -151,15 +152,13 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
     }
 
     function attackBoss() public {
-        console.log("s_randomWords[0] % 10", s_randomWords[0] % 10);
+
         // Get the state of the player's NFT.
         uint nftTokenIDPlayer = nftHolders[msg.sender];
         CharacterAttributes storage player = nftHolderAttributes[nftTokenIDPlayer];
-        console.log("player.attackDamage b4", player.attackDamage);
-        if (s_randomWords[0] % 2 == 0) {
+        if (randomNumber == 8) {
             player.attackDamage = player.attackDamage * 2;
         }
-        console.log("player.attackDamage After", player.attackDamage);
         // Make sure the player has more than 0 HP.
         require(player.hp > 0, "Player has no HP cant play");
         // Make sure the boss has more than 0 HP.
@@ -190,9 +189,10 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
                 }
             }
         }
-        if (s_randomWords[0] % 2 == 0) {
+        if (randomNumber == 8) {
             player.attackDamage = player.attackDamage / 2;
         }
+        emit RandomNumberEvent(randomNumber, "i hope this works");
         emit AttackComplete(msg.sender, bigBoss.hp, player.hp, player.damageDone, allPlayersInGame);
     }
 
@@ -237,8 +237,13 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
         s_randomWords = randomWords;
     }
 
-  modifier onlyOwner() {
-    require(msg.sender == s_owner);
+    function getRandomNumber() public view returns (uint256) {
+        uint256 randomNumberToReturn = randomNumber % 10;
+        return randomNumberToReturn;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == s_owner);
     _;
   }
 }
