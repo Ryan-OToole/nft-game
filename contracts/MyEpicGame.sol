@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.1;
 
@@ -192,6 +193,6 @@ contract MyEpicGame is ERC721 {
     }
 
     function getAllPlayersInGame() public view returns (CharacterAttributes[] memory) {
-        return allPlayersInGame;
+  
     }
  }
