@@ -42,10 +42,6 @@ contract MyEpicGame is ERC721 {
     }
 
     BigBoss public bigBoss;
-    CharacterAttributes private dogSquirrelMan;
-    CharacterAttributes private poodleMoth;
-    CharacterAttributes private batboy;
-    CharacterAttributes private batman;
 
     mapping(address => uint) public nftHolders;
 
