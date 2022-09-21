@@ -50,7 +50,7 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
     event CharacterNftMinted(address sender, uint tokenID, uint characterIndex, CharacterAttributes[] allPlayersInGame);
     event AttackComplete(address sender, uint newBossHP, uint newPlayerHP, uint damageDone, CharacterAttributes[] allPlayersInGame);
     event NftDeath(address sender, CharacterAttributes[] allPlayersInGame);
-    event RandomNumberEvent(uint number, string praise);
+    event RandomNumberEvent(uint256 randomNumber, string praise);
 
     VRFCoordinatorV2Interface COORDINATOR;
     uint64 s_subscriptionId;
@@ -58,7 +58,7 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
     bytes32 keyHash = 0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15;
     uint32 callbackGasLimit = 100000;
     uint16 requestConfirmations = 3;
-    uint32 numWords =  2;
+    uint32 numWords =  5;
     uint256[] public s_randomWords;
     uint256 public s_requestId;
     address s_owner;
@@ -152,12 +152,11 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
     }
 
     function attackBoss() public {
-
         // Get the state of the player's NFT.
         uint nftTokenIDPlayer = nftHolders[msg.sender];
         CharacterAttributes storage player = nftHolderAttributes[nftTokenIDPlayer];
         if (randomNumber == 8) {
-            player.attackDamage = player.attackDamage * 2;
+            player.attackDamage = player.attackDamage * 3;
         }
         // Make sure the player has more than 0 HP.
         require(player.hp > 0, "Player has no HP cant play");
@@ -190,9 +189,9 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
             }
         }
         if (randomNumber == 8) {
-            player.attackDamage = player.attackDamage / 2;
+            player.attackDamage = player.attackDamage / 3;
         }
-        emit RandomNumberEvent(randomNumber, "i hope this works");
+
         emit AttackComplete(msg.sender, bigBoss.hp, player.hp, player.damageDone, allPlayersInGame);
     }
 
@@ -219,7 +218,7 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
         return allPlayersInGame;
     }
 
-    function requestRandomWords() external onlyOwner {
+    function requestRandomWords() public {
         s_requestId = COORDINATOR.requestRandomWords(
         keyHash,
         s_subscriptionId,
@@ -233,17 +232,11 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
         uint256, /* requestId */
         uint256[] memory randomWords
     ) internal override {
-        randomNumber = randomWords[0];
-        s_randomWords = randomWords;
+        randomNumber = (randomWords[0] % 10) + 1;
+        emit RandomNumberEvent(randomNumber, "i am random number");
     }
 
     function getRandomNumber() public view returns (uint256) {
-        uint256 randomNumberToReturn = randomNumber % 10;
-        return randomNumberToReturn;
+        return randomNumber;
     }
-
-    modifier onlyOwner() {
-        require(msg.sender == s_owner);
-    _;
-  }
 }
