@@ -7,10 +7,10 @@ const main = async () => {
       "QmbrE7fyZKdSrPeAuvQFnaAqZs2LgeSi7GUzh14vE9f9HR",
       "QmfWhQq4D5cGtFHdXnkgjJcgM5AuLcuxCvCkVb1L2kSSsC"],
     [100, 200, 300, 175],             
-    [100, 50, 25, 125],                   
+    [100, 50, 50, 125],                   
     "The Joker",
     "Qmb7Mpq61ezSXHUUBjpiKL51u9BMdSxhMxKP4Xkw4spPxg",
-    850,
+    600,
     50,
     '1823'
   );

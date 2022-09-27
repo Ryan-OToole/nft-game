@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.7;
 
@@ -95,8 +94,6 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
                 attackDamage: characterAttackDamage[i],
                 damageDone: 0
             }));
-            CharacterAttributes memory c = defaultCharacters[i];
-            console.log("Done initializing %s w/ HP %s, img %s", c.name, c.hp, c.imageURI);
         }
         COORDINATOR = VRFCoordinatorV2Interface(vrfCoordinator);
         s_owner = msg.sender;
@@ -118,7 +115,6 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
             damageDone: 0
         });
         allPlayersInGame.push(nftHolderAttributes[newItemId]);
-        console.log("Minted NFT w/ tokenId %s and characterIndex %s", newItemId, _characterIndex);
 
         nftHolders[msg.sender] = newItemId;
         _tokenIds.increment();
@@ -232,11 +228,10 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
         uint256, /* requestId */
         uint256[] memory randomWords
     ) internal override {
-        randomNumber = (randomWords[0] % 5) + 1;
+        for (uint i=0;i<randomWords.length; i++) {
+        randomNumber = (randomWords[i] % 5) + 1;
         emit RandomNumberEvent(randomNumber, "i am random number");
-    }
-
-    function getRandomNumber() public view returns (uint256) {
-        return randomNumber;
+        s_randomWords.push(randomNumber);
+        }
     }
 }
