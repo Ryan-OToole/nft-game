@@ -1,30 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.1;
+pragma solidity ^0.8.7;
 
-// NFT contract to inherit from.
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-// Helper functions OpenZeppelin provides.
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "hardhat/console.sol";
 
 import "./libraries/Base64.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 
-contract MyEpicGameFactory {
-        MyEpicGame[] public deployedGames;
-
-    function deployGame(string[] memory _characterNames, string[] memory _characterImageURIs, uint[] memory _characterHP, uint[] memory _characterAttackDamage, string memory _bossName, string memory _bossImageURI, uint _bossHp, uint _bossAttackDamage) public {
-            MyEpicGame myEpicGame = new MyEpicGame(_characterNames, _characterImageURIs, _characterHP, _characterAttackDamage, _bossName, _bossImageURI, _bossHp, _bossAttackDamage);
-            deployedGames.push(myEpicGame);
-    }
-    function getDeployedGames() public view returns (MyEpicGame[] memory) {
-        return deployedGames;
-    }
-}
-
-contract MyEpicGame is ERC721 {
+contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
 
     struct CharacterAttributes {
         address sender;
@@ -37,8 +25,6 @@ contract MyEpicGame is ERC721 {
         uint damageDone;
     }
 
-      // The tokenId is the NFTs unique identifier, it's just a number that goes
-      // 0, 1, 2, 3, etc.
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
@@ -47,7 +33,6 @@ contract MyEpicGame is ERC721 {
     CharacterAttributes[] defaultCharacters;
 
     mapping(uint => CharacterAttributes) public nftHolderAttributes;
-
 
     struct BigBoss {
         string name;
@@ -64,8 +49,21 @@ contract MyEpicGame is ERC721 {
     event CharacterNftMinted(address sender, uint tokenID, uint characterIndex, CharacterAttributes[] allPlayersInGame);
     event AttackComplete(address sender, uint newBossHP, uint newPlayerHP, uint damageDone, CharacterAttributes[] allPlayersInGame);
     event NftDeath(address sender, CharacterAttributes[] allPlayersInGame);
+    event RandomNumberEvent(uint256 randomNumber, string praise);
 
-    constructor(
+    VRFCoordinatorV2Interface COORDINATOR;
+    uint64 s_subscriptionId;
+    address vrfCoordinator = 0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D;
+    bytes32 keyHash = 0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15;
+    uint32 callbackGasLimit = 100000;
+    uint16 requestConfirmations = 3;
+    uint32 numWords =  5;
+    uint256[] public s_randomWords;
+    uint256 public s_requestId;
+    address s_owner;
+    uint256 randomNumber;
+
+    constructor(        
         string[] memory characterNames,
         string[] memory characterImageURIs,
         uint[] memory characterHP,
@@ -73,8 +71,9 @@ contract MyEpicGame is ERC721 {
         string memory bossName,
         string memory bossImageURI,
         uint bossHp,
-        uint bossAttackDamage
-    )     ERC721("Darkwing Nights", "BATWING")
+        uint bossAttackDamage,
+        uint64 subscriptionId
+        ) ERC721("Darkwing Nights", "BATWING") VRFConsumerBaseV2(vrfCoordinator)
     {
         bigBoss = BigBoss({
             name: bossName,
@@ -83,9 +82,7 @@ contract MyEpicGame is ERC721 {
             maxHP: bossHp,
             attackDamage: bossAttackDamage
         });
-
-        console.log("Done initializing boss %s w/ HP %s, img %s", bigBoss.name, bigBoss.hp, bigBoss.imageURI);
-
+    
         for (uint i=0; i < characterNames.length; i++) {
             defaultCharacters.push(CharacterAttributes({
                 sender: msg.sender,
@@ -97,9 +94,10 @@ contract MyEpicGame is ERC721 {
                 attackDamage: characterAttackDamage[i],
                 damageDone: 0
             }));
-            CharacterAttributes memory c = defaultCharacters[i];
-            console.log("Done initializing %s w/ HP %s, img %s", c.name, c.hp, c.imageURI);
         }
+        COORDINATOR = VRFCoordinatorV2Interface(vrfCoordinator);
+        s_owner = msg.sender;
+        s_subscriptionId = subscriptionId;
         _tokenIds.increment();
     }
 
@@ -117,7 +115,6 @@ contract MyEpicGame is ERC721 {
             damageDone: 0
         });
         allPlayersInGame.push(nftHolderAttributes[newItemId]);
-        console.log("Minted NFT w/ tokenId %s and characterIndex %s", newItemId, _characterIndex);
 
         nftHolders[msg.sender] = newItemId;
         _tokenIds.increment();
@@ -154,7 +151,9 @@ contract MyEpicGame is ERC721 {
         // Get the state of the player's NFT.
         uint nftTokenIDPlayer = nftHolders[msg.sender];
         CharacterAttributes storage player = nftHolderAttributes[nftTokenIDPlayer];
-
+        if (randomNumber == 4) {
+            player.attackDamage = player.attackDamage * 3;
+        }
         // Make sure the player has more than 0 HP.
         require(player.hp > 0, "Player has no HP cant play");
         // Make sure the boss has more than 0 HP.
@@ -185,6 +184,10 @@ contract MyEpicGame is ERC721 {
                 }
             }
         }
+        if (randomNumber == 4) {
+            player.attackDamage = player.attackDamage / 3;
+        }
+
         emit AttackComplete(msg.sender, bigBoss.hp, player.hp, player.damageDone, allPlayersInGame);
     }
 
@@ -210,4 +213,25 @@ contract MyEpicGame is ERC721 {
     function getAllPlayersInGame() public view returns (CharacterAttributes[] memory) {
         return allPlayersInGame;
     }
- }
+
+    function requestRandomWords() public {
+        s_requestId = COORDINATOR.requestRandomWords(
+        keyHash,
+        s_subscriptionId,
+        requestConfirmations,
+        callbackGasLimit,
+        numWords
+        );
+    }
+
+    function fulfillRandomWords(
+        uint256, /* requestId */
+        uint256[] memory randomWords
+    ) internal override {
+        for (uint i=0;i<randomWords.length; i++) {
+        randomNumber = (randomWords[i] % 5) + 1;
+        emit RandomNumberEvent(randomNumber, "i am random number");
+        s_randomWords.push(randomNumber);
+        }
+    }
+}
