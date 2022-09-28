@@ -51,6 +51,8 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
     event NftDeath(address sender, CharacterAttributes[] allPlayersInGame);
     event RandomNumberEvent(uint256 randomNumber, string praise);
 
+    uint randomNum1;
+
     VRFCoordinatorV2Interface COORDINATOR;
     uint64 s_subscriptionId;
     address vrfCoordinator = 0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D;
@@ -58,10 +60,9 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
     uint32 callbackGasLimit = 100000;
     uint16 requestConfirmations = 3;
     uint32 numWords =  5;
-    uint256[] public s_randomWords;
     uint256 public s_requestId;
     address s_owner;
-    uint256 randomNumber;
+    uint256[] randomNumbers;
 
     constructor(        
         string[] memory characterNames,
@@ -151,7 +152,7 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
         // Get the state of the player's NFT.
         uint nftTokenIDPlayer = nftHolders[msg.sender];
         CharacterAttributes storage player = nftHolderAttributes[nftTokenIDPlayer];
-        if (randomNumber == 4) {
+        if (randomNum1 == 4) {
             player.attackDamage = player.attackDamage * 3;
         }
         // Make sure the player has more than 0 HP.
@@ -184,7 +185,7 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
                 }
             }
         }
-        if (randomNumber == 4) {
+        if (randomNum1 == 4) {
             player.attackDamage = player.attackDamage / 3;
         }
 
@@ -228,10 +229,8 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
         uint256, /* requestId */
         uint256[] memory randomWords
     ) internal override {
-        for (uint i=0;i<randomWords.length; i++) {
-        randomNumber = (randomWords[i] % 5) + 1;
-        emit RandomNumberEvent(randomNumber, "i am random number");
-        s_randomWords.push(randomNumber);
+        randomNum1 = (randomWords[0] % 5) + 1;
+        randomNumbers.push(randomNum1);
+        emit RandomNumberEvent(randomNum1, "i am random number");
         }
-    }
 }
