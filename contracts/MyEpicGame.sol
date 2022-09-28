@@ -229,8 +229,8 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
         uint256, /* requestId */
         uint256[] memory randomWords
     ) internal override {
-        randomNum1 = (randomWords[0] % 5) + 1;
-        randomNumbers.push(randomNum1);
-        emit RandomNumberEvent(randomNum1, "i am random number");
-        }
+            randomNum1 = (randomWords[0] % 5) + 1;
+            randomNumbers.push(randomNum1);
+            emit RandomNumberEvent(randomNum1, "i am random number");
+    }
 }
