@@ -10,7 +10,7 @@ const main = async () => {
     [100, 50, 50, 125],                   
     "The Joker",
     "Qmb7Mpq61ezSXHUUBjpiKL51u9BMdSxhMxKP4Xkw4spPxg",
-    600,
+    850,
     50,
     '1823'
   );

@@ -47,11 +47,9 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
     mapping(address => uint) public nftHolders;
 
     event CharacterNftMinted(address sender, uint tokenID, uint characterIndex, CharacterAttributes[] allPlayersInGame);
-    event AttackComplete(address sender, uint newBossHP, uint newPlayerHP, uint damageDone, CharacterAttributes[] allPlayersInGame);
+    event AttackComplete(address sender, uint newBossHP, uint newPlayerHP, uint damageDone, CharacterAttributes[] allPlayersInGame, uint randomNumber);
     event NftDeath(address sender, CharacterAttributes[] allPlayersInGame);
-    event RandomNumberEvent(uint256 randomNumber, string praise);
-
-    uint randomNum1;
+    event RequestFulfilled(uint256 requestId, uint256 randomNumber);
 
     VRFCoordinatorV2Interface COORDINATOR;
     uint64 s_subscriptionId;
@@ -62,7 +60,7 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
     uint32 numWords =  5;
     uint256 public s_requestId;
     address s_owner;
-    uint256[] randomNumbers;
+    uint256 randomNumber;
 
     constructor(        
         string[] memory characterNames,
@@ -152,7 +150,7 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
         // Get the state of the player's NFT.
         uint nftTokenIDPlayer = nftHolders[msg.sender];
         CharacterAttributes storage player = nftHolderAttributes[nftTokenIDPlayer];
-        if (randomNum1 == 4) {
+        if (randomNumber >= 4) {
             player.attackDamage = player.attackDamage * 3;
         }
         // Make sure the player has more than 0 HP.
@@ -185,11 +183,10 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
                 }
             }
         }
-        if (randomNum1 == 4) {
+       if (randomNumber >= 4) {
             player.attackDamage = player.attackDamage / 3;
         }
-
-        emit AttackComplete(msg.sender, bigBoss.hp, player.hp, player.damageDone, allPlayersInGame);
+        emit AttackComplete(msg.sender, bigBoss.hp, player.hp, player.damageDone, allPlayersInGame, randomNumber);
     }
 
     function checkIfUserHasNFT() public view returns (CharacterAttributes memory) {
@@ -226,11 +223,10 @@ contract MyEpicGame is ERC721, VRFConsumerBaseV2 {
     }
 
     function fulfillRandomWords(
-        uint256, /* requestId */
+        uint256 requestId,
         uint256[] memory randomWords
     ) internal override {
-            randomNum1 = (randomWords[0] % 5) + 1;
-            randomNumbers.push(randomNum1);
-            emit RandomNumberEvent(randomNum1, "i am random number");
+        randomNumber = ((randomWords[0] % 5) + 1);
+        emit RequestFulfilled(requestId, randomNumber);
     }
 }
