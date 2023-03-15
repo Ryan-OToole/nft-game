@@ -41,12 +41,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
       url: process.env.INFURA_API_GOERLI,
       accounts: [process.env.METAMASK_KEY_GOERLI],
       chainId: 5
-     },
-     rinkeby: {
-       url: process.env.INFURA_API_RINKEBY,
-       accounts: [process.env.METAMASK_KEY_RINKEBY],
-       chainId: 4
-     },
+     }
    },
  };
 
